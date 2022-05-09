@@ -25,6 +25,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -39,11 +42,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MainActivity extends AppCompatActivity {
-Button button;
+Button button,button2;
 ImageView imageView;
 String currentImagePath=null;
     File imageFile=null;
@@ -53,7 +64,31 @@ String currentImagePath=null;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         button=findViewById(R.id.button);
+        button2=findViewById(R.id.button2);
         imageView=findViewById(R.id.imageView);
+        button2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                RestClient restClient = new RestClient();
+                ApiService apiService = restClient.getApiService();
+                RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), imageFile);
+                MultipartBody.Part body = MultipartBody.Part.createFormData("FileData", imageFile.getName(), requestFile);
+
+                RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"), paraBioMetric("1", "9", "BiometricPhoto", "Yes", "2050", "Functional", "Yes", "No", "26.7834784", "23.67674", "12345", "29", "AV", "VA223345456", "5634"," arrayListImages1"));
+                Call<List<JsonObject>> call=apiService.uploadDataInBioMetric(body,description);
+                call.enqueue(new Callback<List<JsonObject>>() {
+                    @Override
+                    public void onResponse(Call<List<JsonObject>> call, Response<List<JsonObject>> response) {
+                        Log.d("TAG", "onResponse: "+response.body()+response);
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<JsonObject>> call, Throwable t) {
+
+                    }
+                });
+            }
+        });
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -149,5 +184,34 @@ String currentImagePath=null;
 
         }
     }
+
+    private String paraBioMetric(String action, String paramId, String bioMetricDetails, String availabilty, String yearOfInstallation, String workingStatis, String biometricForStaff, String biometricForStudent, String latitude, String longitude, String schoolId, String periodID, String usertypeid, String userid, String noOfMachines, String arrayListImages1) {
+        JsonObject jsonObject=new JsonObject();
+        jsonObject.addProperty("Action",action);
+        jsonObject.addProperty("ParamId",paramId);
+        jsonObject.addProperty("ParamName",bioMetricDetails);
+        jsonObject.addProperty("Lat",latitude);
+        jsonObject.addProperty("Long",longitude);
+        jsonObject.addProperty("SchoolId",schoolId);
+        jsonObject.addProperty("PeriodID",periodID);
+        jsonObject.addProperty("CreatedBy",usertypeid);
+        jsonObject.addProperty("UserCode",userid);
+        jsonObject.addProperty("InstallationYear",yearOfInstallation);
+        jsonObject.addProperty("WorkingStatus",workingStatis);
+        jsonObject.addProperty("BiometricUseStaff",biometricForStaff);
+        jsonObject.addProperty("BiometricUseStudent",biometricForStudent);
+        jsonObject.addProperty("Availabilty",availabilty);
+        jsonObject.addProperty("NoOfMachines",noOfMachines);
+
+//        JsonArray jsonArray = new JsonArray();
+//        for (int i = 0; i < arrayListImages1.size(); i++) {
+//            jsonArray.add(paraGetImageBase64( arrayListImages1.get(i), i));
+//
+//        }
+//        jsonObject.add("BiometricPhoto", (JsonElement) jsonArray);
+        return jsonObject.toString();
+
+    }
+
 
 }
